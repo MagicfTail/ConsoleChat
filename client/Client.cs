@@ -19,8 +19,7 @@ partial class Client : ConsoleInterface
         catch (SocketException)
         {
             Console.WriteLine("Connection failed");
-            Stop();
-            return;
+            Environment.Exit(1);
         }
 
         Thread thread = new(() =>
@@ -40,7 +39,8 @@ partial class Client : ConsoleInterface
             if (response != "Accept")
             {
                 Stop();
-                return;
+                Console.WriteLine(response);
+                Environment.Exit(1);
             }
 
             while (true)
