@@ -39,7 +39,8 @@ partial class Client : ConsoleInterface
 
             if (response != "Accept")
             {
-                throw new HandshakeFailedException(response);
+                Stop();
+                return;
             }
 
             while (true)

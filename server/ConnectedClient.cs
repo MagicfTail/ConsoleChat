@@ -20,8 +20,19 @@ public class ConnectedClient
 
     public void Send(object data)
     {
-        byte[] message = (byte[])data;
-        _client.GetStream().Write(message, 0, message.Length);
+        try
+        {
+            byte[] message = (byte[])data;
+            _client.GetStream().Write(message, 0, message.Length);
+        }
+        catch (IOException)
+        {
+            return;
+        }
+        catch (InvalidOperationException)
+        {
+            return;
+        }
     }
 
     public bool IsOpen()
