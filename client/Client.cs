@@ -1,7 +1,7 @@
 using ConsoleIOUI;
 using System.Net.Sockets;
 using System.Text;
-using System.Text.RegularExpressions;
+using ConsoleChat.Common;
 
 namespace ChatClient;
 
@@ -19,7 +19,8 @@ partial class Client : ConsoleInterface
         catch (SocketException)
         {
             Console.WriteLine("Connection failed");
-            Environment.Exit(0);
+            Stop();
+            return;
         }
 
         Thread thread = new(() =>
@@ -49,7 +50,7 @@ partial class Client : ConsoleInterface
                     bytesRead = nwStream.Read(bytesToRead, 0, _tcpClient.ReceiveBufferSize);
                     response = Encoding.ASCII.GetString(bytesToRead, 0, bytesRead);
 
-                    Message message = new(response);
+                    ChatMessage message = new(response);
 
                     AddMessage(message.Body, message.Sender);
                 }
@@ -76,6 +77,6 @@ partial class Client : ConsoleInterface
 
     public override void ExitHandler()
     {
-        Environment.Exit(0);
+        _tcpClient?.Close();
     }
 }

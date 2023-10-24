@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
 
-namespace ChatClient;
+namespace ConsoleChat.Common;
 
-partial class Message
+public partial class ChatMessage
 {
     [GeneratedRegex("(.*?):(.*)")]
     private static partial Regex SenderBodyRegex();
@@ -10,13 +10,13 @@ partial class Message
     public string Sender { get; private set; }
     public string Body { get; private set; }
 
-    public Message(string response)
+    public ChatMessage(string response)
     {
         Match match = SenderBodyRegex().Match(response);
 
         if (!match.Success)
         {
-            throw new MalformedMessageError("Malformed message received");
+            throw new MalformedMessageException("Malformed message received");
         }
 
         Sender = match.Groups[1].Value;

@@ -8,8 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="ConsoleIOUI" Version="1.0.0" />
+    <PackageReference Include="ConsoleIOUI" Version="1.0.1" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ConsoleChat.Common\ConsoleChat.Common.csproj" />
   </ItemGroup>
 
 </Project>

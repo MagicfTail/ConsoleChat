@@ -1,6 +1,6 @@
-namespace ChatClient;
+namespace ConsoleChat.Common;
 
-class HandshakeFailedException : Exception
+public class HandshakeFailedException : Exception
 {
     public HandshakeFailedException()
     {
@@ -17,18 +17,18 @@ class HandshakeFailedException : Exception
     }
 }
 
-class MalformedMessageError : Exception
+public class MalformedMessageException : Exception
 {
-    public MalformedMessageError()
+    public MalformedMessageException()
     {
     }
 
-    public MalformedMessageError(string message)
+    public MalformedMessageException(string message)
         : base(message)
     {
     }
 
-    public MalformedMessageError(string message, Exception inner)
+    public MalformedMessageException(string message, Exception inner)
         : base(message, inner)
     {
     }
