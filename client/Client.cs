@@ -7,63 +7,69 @@ namespace ChatClient;
 
 partial class Client : ConsoleInterface
 {
-    private readonly TcpClient? _tcpClient;
+    private TcpClient? _tcpClient;
+    private NetworkStream? _nwStream;
+    private readonly Thread _thread;
+
+    private readonly string _ip;
+    private readonly int _port;
+
+    private string error = "";
 
     public Client(string displayName, string room, string ip, int port) : base(15)
     {
-        // Create a TCPClient object at the IP and port no
-        try
-        {
-            _tcpClient = new(ip, port);
-        }
-        catch (SocketException)
-        {
-            Console.WriteLine("Connection failed");
-            Environment.Exit(1);
-        }
+        _ip = ip;
+        _port = port;
 
-        Thread thread = new(() =>
+        _thread = new(() =>
         {
-            // Get the stream to read from and write to
-            NetworkStream nwStream = _tcpClient.GetStream();
+            if (_tcpClient == null || _nwStream == null)
+            {
+                return;
+            }
 
             // Handshake joining room
             byte[] bytesToSend = Encoding.ASCII.GetBytes($"room:{room}-disp:{displayName}");
-            nwStream.Write(bytesToSend, 0, bytesToSend.Length);
+            _nwStream.Write(bytesToSend, 0, bytesToSend.Length);
 
             byte[] bytesToRead = new byte[_tcpClient.ReceiveBufferSize];
-            int bytesRead = nwStream.Read(bytesToRead, 0, _tcpClient.ReceiveBufferSize);
+            int bytesRead = _nwStream.Read(bytesToRead, 0, _tcpClient.ReceiveBufferSize);
 
             string response = Encoding.ASCII.GetString(bytesToRead, 0, bytesRead);
 
             if (response != "Accept")
             {
                 Stop();
-                Console.WriteLine(response);
-                Environment.Exit(1);
+                error = response;
+                return;
             }
 
-            while (true)
+            try
             {
-                try
+                while (true)
                 {
                     bytesToRead = new byte[_tcpClient.ReceiveBufferSize];
-                    bytesRead = nwStream.Read(bytesToRead, 0, _tcpClient.ReceiveBufferSize);
+                    bytesRead = _nwStream.Read(bytesToRead, 0, _tcpClient.ReceiveBufferSize);
                     response = Encoding.ASCII.GetString(bytesToRead, 0, bytesRead);
 
                     ChatMessage message = new(response);
 
                     AddMessage(message.Body, message.Sender);
                 }
-                catch
-                {
-                    Stop();
-                    return;
-                }
             }
-        });
+            catch (IOException ex)
+            {
+                if (ex.InnerException?.Message != "An established connection was aborted by the software in your host machine.")
+                {
+                    error = "Connection to server dropped";
+                }
 
-        thread.Start();
+                Stop();
+            }
+        })
+        {
+            IsBackground = true
+        };
     }
 
     public override void UserInputHandler(string input)
@@ -72,12 +78,45 @@ partial class Client : ConsoleInterface
 
         ThreadPool.QueueUserWorkItem((x) =>
         {
-            _tcpClient!.GetStream().Write(data, 0, input.Length);
+            _tcpClient?.GetStream().Write(data, 0, input.Length);
         }, data);
+    }
+
+    public override void EntranceHandler()
+    {
+        // Create a TCPClient object at the IP and port no, and get stream
+        try
+        {
+            _tcpClient = new(_ip, _port);
+            _nwStream = _tcpClient.GetStream();
+        }
+        catch (SocketException)
+        {
+            error = "Connection failed";
+        }
+
+        if (_tcpClient == null || _nwStream == null || _thread == null)
+        {
+            Stop();
+            return;
+        }
+
+        _thread.Start();
     }
 
     public override void ExitHandler()
     {
+        _nwStream?.Close();
         _tcpClient?.Close();
+
+        if (_thread.IsAlive)
+        {
+            _thread.Join();
+        }
+
+        if (error != "")
+        {
+            Console.WriteLine(error);
+        }
     }
 }
