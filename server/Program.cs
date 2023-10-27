@@ -2,8 +2,8 @@
 
 class Program
 {
-    const string SERVER_IP = "127.0.0.1";
-    const int PORT_NO = 5000;
+    const string SERVER_IP = "::";
+    const int PORT_NO = 8300;
 
     static void Main(string[] args)
     {
