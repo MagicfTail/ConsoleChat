@@ -7,6 +7,8 @@ namespace ChatClient;
 
 partial class Client : ConsoleInterface
 {
+    private const string localAbortString = "An established connection was aborted by the software in your host machine.";
+
     private TcpClient? _tcpClient;
     private NetworkStream? _nwStream;
     private readonly Thread _thread;
@@ -53,13 +55,12 @@ partial class Client : ConsoleInterface
                     response = Encoding.ASCII.GetString(bytesToRead, 0, bytesRead);
 
                     ChatMessage message = new(response);
-
                     AddMessage(message.Body, message.Sender);
                 }
             }
             catch (IOException ex)
             {
-                if (ex.InnerException?.Message != "An established connection was aborted by the software in your host machine.")
+                if (ex.InnerException?.Message != localAbortString)
                 {
                     error = "Connection to server dropped";
                 }
@@ -90,9 +91,9 @@ partial class Client : ConsoleInterface
             _tcpClient = new(_ip, _port);
             _nwStream = _tcpClient.GetStream();
         }
-        catch (SocketException)
+        catch (SocketException ex)
         {
-            error = "Connection failed";
+            error = "Connection failed: " + ex.Message;
         }
 
         if (_tcpClient == null || _nwStream == null || _thread == null)

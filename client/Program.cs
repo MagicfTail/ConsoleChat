@@ -27,7 +27,7 @@ partial class Program
         Option<string> server = new(
             name: "--server",
             description: "The url of the server. Don't set unless you're trying to join a custom host",
-            getDefaultValue: () => "127.0.0.1"
+            getDefaultValue: () => "35.211.95.67"
         )
         { IsHidden = true };
         server.AddAlias("-s");
@@ -35,7 +35,7 @@ partial class Program
         Option<int> port = new(
             name: "--port",
             description: "The port on the server. Don't set unless you're trying to join a custom host",
-            getDefaultValue: () => 5000
+            getDefaultValue: () => 8300
         )
         { IsHidden = true };
         port.AddAlias("-p");
@@ -71,6 +71,8 @@ partial class Program
         if (string.IsNullOrEmpty(input) || !ValidCharsOnlyRegex().IsMatch(input))
         {
             Console.WriteLine($"Invalid {type} Name. Must only contain letters, numbers, and underscores");
+            Console.WriteLine("Press any key to close...");
+            Console.ReadKey(true);
             return false;
         }
 
