@@ -6,6 +6,11 @@ namespace ChatServer;
 
 public class RoomInstance
 {
+    private readonly byte[] ConnectionSucceeded = Encoding.ASCII.GetBytes("Accept");
+    private readonly byte[] DupeDisplayNameError = Encoding.ASCII.GetBytes("User with chosen Display Name already exists in Room");
+
+    private byte[] CurrentUsersString() => Encoding.ASCII.GetBytes($""":Current Users: {string.Join(", ", _clients.Keys)}""");
+
     private readonly Dictionary<string, ConnectedClient> _clients;
     private readonly object _clientsLock = new();
 
@@ -25,21 +30,27 @@ public class RoomInstance
         }
     }
 
-    public bool AddClient(TcpClient client, string id)
+    public bool AddClient(ConnectedClient cClient)
     {
         lock (_clientsLock)
         {
             foreach (var c in _clients.Values)
             {
-                if (c.Id == id)
+                if (c.Id == cClient.Id)
                 {
+                    cClient.Send(DupeDisplayNameError);
+                    cClient.Kick();
+
                     return false;
                 }
             }
 
-            ConnectedClient connectedClient = new(client, id);
-            _clients.Add(id, connectedClient);
+            _clients.Add(cClient.Id, cClient);
         }
+
+        cClient.Send(ConnectionSucceeded);
+
+        SendMessage("", $"New user connected: {cClient.Id}");
 
         return true;
     }

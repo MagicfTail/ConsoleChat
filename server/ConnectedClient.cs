@@ -4,6 +4,7 @@ namespace ChatServer;
 
 public class ConnectedClient
 {
+    private static readonly object sendLock = new();
     private readonly TcpClient _client;
     public string Id { get; private set; }
 
@@ -20,18 +21,21 @@ public class ConnectedClient
 
     public void Send(object data)
     {
-        try
+        lock (sendLock)
         {
-            byte[] message = (byte[])data;
-            _client.GetStream().Write(message, 0, message.Length);
-        }
-        catch (IOException)
-        {
-            return;
-        }
-        catch (InvalidOperationException)
-        {
-            return;
+            try
+            {
+                byte[] message = (byte[])data;
+                _client.GetStream().Write(message, 0, message.Length);
+            }
+            catch (IOException)
+            {
+                return;
+            }
+            catch (InvalidOperationException)
+            {
+                return;
+            }
         }
     }
 
